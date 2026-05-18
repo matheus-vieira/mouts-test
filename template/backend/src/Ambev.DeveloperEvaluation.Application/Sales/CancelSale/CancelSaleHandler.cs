@@ -1,10 +1,16 @@
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Application.Sales.CancelSale;
 
-public class CancelSaleHandler(
-    ISaleRepository repository) : IRequestHandler<CancelSaleCommand, Unit>
+/// <summary>
+/// Handler for the CancelSaleCommand.
+/// Ensures the domain invariant for cancellation is enforced.
+/// </summary>
+public partial class CancelSaleHandler(
+    ISaleRepository repository,
+    ILogger<CancelSaleHandler> logger) : IRequestHandler<CancelSaleCommand, Unit>
 {
     public async Task<Unit> Handle(CancelSaleCommand command, CancellationToken cancellationToken)
     {
@@ -12,7 +18,10 @@ public class CancelSaleHandler(
             ?? throw new KeyNotFoundException($"Sale with ID {command.Id} was not found");
 
         sale.Cancel();
+        
         await repository.UpdateAsync(sale, cancellationToken);
+        
+        LogSaleCancelled(logger, sale.Id, sale.SaleNumber);
 
         return Unit.Value;
     }
