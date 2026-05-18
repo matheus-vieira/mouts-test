@@ -22,6 +22,7 @@ public partial class SaleCreatedHandler(
     public Task Handle(SaleCreatedEvent notification, CancellationToken cancellationToken)
     {
         LogSaleCreated(
+            logger,
             notification.Sale.SaleNumber,
             notification.OccurredAt,
             notification.Sale.TotalAmount);

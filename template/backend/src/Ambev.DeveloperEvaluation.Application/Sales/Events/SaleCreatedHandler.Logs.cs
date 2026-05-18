@@ -8,5 +8,10 @@ public partial class SaleCreatedHandler
         EventId = 1001,
         Level = LogLevel.Information,
         Message = "Domain Event: Sale {SaleNumber} was created at {OccurredAt}. Total Amount: {TotalAmount}")]
-    static partial void LogSaleCreated(string saleNumber, DateTime occurredAt, decimal totalAmount);
+    static partial void LogSaleCreated(
+        ILogger logger,
+        string saleNumber,
+        DateTime occurredAt,
+        decimal totalAmount
+    );
 }
