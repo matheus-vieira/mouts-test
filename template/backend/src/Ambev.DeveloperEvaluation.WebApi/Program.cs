@@ -40,7 +40,8 @@ public class Program
 
             builder.RegisterDependencies();
 
-            builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(ApplicationLayer).Assembly);
+            var autoMapperLicenseKey = builder.Configuration["AutoMapper:LicenseKey"];
+            builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = autoMapperLicenseKey, typeof(Program));
 
             builder.Services.AddMediatR(cfg =>
             {
