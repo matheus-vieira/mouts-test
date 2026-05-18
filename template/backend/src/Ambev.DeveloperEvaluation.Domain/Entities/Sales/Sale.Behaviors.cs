@@ -7,13 +7,15 @@ public partial class Sale
     /// <summary>
     /// Cancels this sale. Once cancelled, no further modifications are allowed.
     /// </summary>
-    /// <exception cref="DomainException">Thrown when the sale is already cancelled.</exception>
-    public void Cancel()
+    /// <returns>Metadata required to publish a cancellation event.</returns>
+    public (Guid Id, string Number) Cancel()
     {
         if (IsCancelled)
             throw new DomainException("Sale is already cancelled.");
 
         IsCancelled = true;
+
+        return (Id, SaleNumber);
     }
 
     /// <summary>
