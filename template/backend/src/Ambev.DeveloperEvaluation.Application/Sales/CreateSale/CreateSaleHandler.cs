@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
+using Ambev.DeveloperEvaluation.Domain.Events.Sales;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using AutoMapper;
 using FluentValidation;
@@ -20,18 +21,15 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 /// This handler depends only on <see cref="ISaleCreateRepository"/> (write side),
 /// following the interface segregation defined in the domain layer.
 /// </remarks>
-public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleResult>
+/// <param name="repository">Write-side repository for sale persistence.</param>
+/// <param name="mapper">AutoMapper instance for entity-to-DTO mapping.</param>
+/// <param name="mediator">Mediator instance for dispatching domain events.</param>
+public class CreateSaleHandler(
+    ISaleCreateRepository repository,
+    IMapper mapper,
+    IMediator mediator
+) : IRequestHandler<CreateSaleCommand, CreateSaleResult>
 {
-    private readonly ISaleCreateRepository _repository;
-    private readonly IMapper _mapper;
-
-    /// <param name="repository">Write-side repository for sale persistence.</param>
-    /// <param name="mapper">AutoMapper instance for entity-to-DTO mapping.</param>
-    public CreateSaleHandler(ISaleCreateRepository repository, IMapper mapper)
-    {
-        _repository = repository;
-        _mapper = mapper;
-    }
 
     /// <summary>
     /// Processes the <see cref="CreateSaleCommand"/> and returns the created sale result.
@@ -68,8 +66,12 @@ public class CreateSaleHandler : IRequestHandler<CreateSaleCommand, CreateSaleRe
             command.BranchName,
             domainItems);
 
-        var createdSale = await _repository.CreateAsync(sale, cancellationToken);
+        var createdSale = await repository.CreateAsync(sale, cancellationToken);
 
-        return _mapper.Map<CreateSaleResult>(createdSale);
+        // Dispatch Domain Event
+        // In a multi-aggregate scenario, this would ideally be handled by a Commit-time dispatcher
+        await mediator.Publish(new SaleCreatedEvent(createdSale), cancellationToken);
+
+        return mapper.Map<CreateSaleResult>(createdSale);
     }
 }
