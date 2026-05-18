@@ -3,6 +3,10 @@ using FluentValidation;
 
 namespace Ambev.DeveloperEvaluation.Domain.Validation.Sales;
 
+/// <summary>
+/// Validates the input consistency of a <see cref="Sale"/> aggregate.
+/// Business invariants (e.g. cancellation rules) are enforced in the entity itself.
+/// </summary>
 public class SaleValidator : AbstractValidator<Sale>
 {
     public SaleValidator()
