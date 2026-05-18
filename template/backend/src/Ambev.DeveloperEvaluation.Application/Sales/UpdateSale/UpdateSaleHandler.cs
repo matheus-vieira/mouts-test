@@ -13,22 +13,23 @@ public partial class UpdateSaleHandler(
 {
     public async Task<UpdateSaleResult> Handle(UpdateSaleCommand command, CancellationToken cancellationToken)
     {
+        LogUpdateInitiated(logger, command.Id);
+
         var sale = await repository.GetByIdAsync(command.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Sale with ID {command.Id} was not found");
 
         if (sale.IsCancelled)
             throw new InvalidOperationException("Cannot update a cancelled sale.");
 
-        // Re-creating items to ensure business rules (discounts) are recalculated
-        var newItems = command.Items.Select(i => 
+        // Re-creating items ensures business rules (discounts) are recalculated via SaleItem.Create
+        var newItems = command.Items.Select(i =>
             SaleItem.Create(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice));
 
-        // Aggregate method for update (presumed added to Sale entity for internal consistency)
         sale.UpdateItems(newItems);
-        
+
         await repository.UpdateAsync(sale, cancellationToken);
-        
-        LogSaleUpdated(logger, sale.Id, sale.TotalAmount);
+
+        LogUpdateSuccess(logger, sale.Id, sale.Items.Count);
 
         return mapper.Map<UpdateSaleResult>(sale);
     }
