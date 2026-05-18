@@ -1,97 +1,48 @@
-using Ambev.DeveloperEvaluation.Common.Validation;
 using Ambev.DeveloperEvaluation.Domain.Common;
-using Ambev.DeveloperEvaluation.Domain.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Domain.Entities.Sales;
 
 /// <summary>
-/// Aggregate root for the sales context.
-/// All changes to sale items must go through this aggregate.
+/// Aggregate root for the Sales bounded context.
 /// </summary>
-public class Sale : BaseEntity
+/// <remarks>
+/// All mutations to items and state must go through this aggregate.
+/// This is a partial class. Responsibilities are split across:
+/// - <c>Sale.Factory.cs</c>    — creation and guard clauses
+/// - <c>Sale.Behaviors.cs</c>  — domain behaviors (cancel, recalculate)
+/// - <c>Sale.Validation.cs</c> — FluentValidation integration
+/// </remarks>
+public partial class Sale : BaseEntity
 {
+    /// <summary>Human-readable unique sale identifier (e.g. "SALE-2024-0001").</summary>
     public string SaleNumber { get; private set; } = string.Empty;
+
+    /// <summary>Date and time when the sale was created.</summary>
     public DateTime SaleDate { get; private set; }
 
-    /// <summary>External identity: customer identifier.</summary>
+    /// <summary>External identity reference to the customer.</summary>
     public Guid CustomerId { get; private set; }
 
-    /// <summary>External identity: denormalized customer name.</summary>
+    /// <summary>Denormalized customer name captured at the time of sale.</summary>
     public string CustomerName { get; private set; } = string.Empty;
 
-    /// <summary>External identity: branch identifier.</summary>
+    /// <summary>External identity reference to the branch.</summary>
     public Guid BranchId { get; private set; }
 
-    /// <summary>External identity: denormalized branch name.</summary>
+    /// <summary>Denormalized branch name captured at the time of sale.</summary>
     public string BranchName { get; private set; } = string.Empty;
 
+    /// <summary>Sum of all item totals after discounts.</summary>
     public decimal TotalAmount { get; private set; }
+
+    /// <summary>Indicates whether this sale has been cancelled.</summary>
     public bool IsCancelled { get; private set; }
 
     private readonly List<SaleItem> _items = [];
+
+    /// <summary>Read-only collection of items belonging to this sale.</summary>
     public IReadOnlyCollection<SaleItem> Items => _items;
 
+    /// <summary>Required by EF Core. Use <see cref="Create"/> for domain creation.</summary>
     protected Sale() { }
-
-    /// <summary>
-    /// Creates a new Sale with the provided items.
-    /// </summary>
-    public static Sale Create(
-        string saleNumber,
-        DateTime saleDate,
-        Guid customerId,
-        string customerName,
-        Guid branchId,
-        string branchName,
-        IEnumerable<SaleItem> items)
-    {
-        var itemList = items?.ToList() ?? [];
-
-        if (itemList.Count == 0)
-            throw new DomainException("A sale must contain at least one item.");
-
-        var sale = new Sale
-        {
-            Id = Guid.NewGuid(),
-            SaleNumber = saleNumber,
-            SaleDate = saleDate,
-            CustomerId = customerId,
-            CustomerName = customerName,
-            BranchId = branchId,
-            BranchName = branchName,
-            IsCancelled = false
-        };
-
-        sale._items.AddRange(itemList);
-        sale.RecalculateTotal();
-
-        return sale;
-    }
-
-    /// <summary>
-    /// Cancels the sale. Cancelled sales cannot be modified.
-    /// </summary>
-    public void Cancel()
-    {
-        if (IsCancelled)
-            throw new DomainException("Sale is already cancelled.");
-
-        IsCancelled = true;
-    }
-
-    private void RecalculateTotal()
-    {
-        TotalAmount = _items.Sum(i => i.TotalAmount);
-    }
-
-    public ValidationResultDetail Validate()
-    {
-        var validator = new SaleValidator();
-        var result = validator.Validate(this);
-        return new ValidationResultDetail
-        {
-            IsValid = result.IsValid,
-            Errors = result.Errors.Select(o => (ValidationErrorDetail)o)
-        };
-    }
 }
