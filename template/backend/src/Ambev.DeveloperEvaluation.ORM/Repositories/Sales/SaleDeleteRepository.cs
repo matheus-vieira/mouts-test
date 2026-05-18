@@ -7,10 +7,8 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories.Sales;
 /// Handles delete operations for Sale aggregates.
 /// Loads the aggregate before removal to ensure EF Core tracks the entity correctly.
 /// </summary>
-public class SaleDeleteRepository(
-    DefaultContext context
-) : SaleRepository(context),
-    ISaleDeleteRepository
+public class SaleDeleteRepository(DefaultContext context)
+    : SaleRepository(context), ISaleDeleteRepository
 {
     /// <inheritdoc/>
     /// <returns><c>true</c> if deleted, <c>false</c> if not found.</returns>

@@ -6,12 +6,10 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories.Sales;
 
 /// <summary>
 /// Handles read operations for <see cref="Sale"/> aggregates.
-/// Eagerly loads the Items collection to ensure aggregate consistency.
+/// Eagerly loads the Items collection to ensure aggregate consistency on every query.
 /// </summary>
-public class SaleReadRepository(
-    DefaultContext context
-) : SaleRepository(context),
-    ISaleReadRepository
+public class SaleReadRepository(DefaultContext context)
+    : SaleRepository(context), ISaleReadRepository
 {
     /// <inheritdoc/>
     public async Task<Sale?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

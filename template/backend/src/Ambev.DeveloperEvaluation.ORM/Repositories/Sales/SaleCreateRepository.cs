@@ -7,12 +7,9 @@ namespace Ambev.DeveloperEvaluation.ORM.Repositories.Sales;
 /// Handles persistence of new <see cref="Sale"/> aggregates.
 /// Implements only the write side of the repository pattern.
 /// </summary>
-public class SaleCreateRepository(
-    DefaultContext context
-) : SaleRepository(context),
-    ISaleCreateRepository
+public class SaleCreateRepository(DefaultContext context)
+    : SaleRepository(context), ISaleCreateRepository
 {
-    
     /// <inheritdoc/>
     public async Task<Sale> CreateAsync(Sale sale, CancellationToken cancellationToken = default)
     {
