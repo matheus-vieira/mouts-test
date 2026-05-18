@@ -14,8 +14,26 @@ public partial class Sale
             throw new DomainException("Sale is already cancelled.");
 
         IsCancelled = true;
-
         return (Id, SaleNumber);
+    }
+
+    /// <summary>
+    /// Replaces all current items with the provided collection.
+    /// Discount rules are enforced by <see cref="SaleItem.Create"/> at item creation time.
+    /// Total amount is recalculated after replacement.
+    /// </summary>
+    /// <param name="newItems">The new set of items to replace the current ones.</param>
+    /// <exception cref="DomainException">Thrown when the new items collection is empty.</exception>
+    public void UpdateItems(IEnumerable<SaleItem> newItems)
+    {
+        var itemList = newItems?.ToList() ?? [];
+
+        if (itemList.Count == 0)
+            throw new DomainException("Sale must have at least one item.");
+
+        _items.Clear();
+        _items.AddRange(itemList);
+        RecalculateTotal();
     }
 
     /// <summary>
