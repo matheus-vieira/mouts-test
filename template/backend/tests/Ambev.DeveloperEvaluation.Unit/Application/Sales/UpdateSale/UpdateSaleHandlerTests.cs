@@ -1,5 +1,6 @@
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
+using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using AutoMapper;
 using Bogus;
@@ -122,8 +123,8 @@ public class UpdateSaleHandlerTests
             .WithMessage($"Sale with ID {command.Id} was not found");
     }
 
-    [Fact(DisplayName = "Given cancelled sale When updating Then throws InvalidOperationException")]
-    public async Task Handle_CancelledSale_ThrowsInvalidOperationException()
+    [Fact(DisplayName = "Given cancelled sale When updating Then throws DomainException")]
+    public async Task Handle_CancelledSale_ThrowsDomainException()
     {
         // Given
         var existingSale = BuildSale();
@@ -136,7 +137,7 @@ public class UpdateSaleHandlerTests
         var act = () => _handler.Handle(command, CancellationToken.None);
 
         // Then
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Cannot update a cancelled sale.");
     }
 
