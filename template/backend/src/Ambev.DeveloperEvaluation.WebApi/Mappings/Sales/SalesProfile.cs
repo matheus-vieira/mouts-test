@@ -12,5 +12,6 @@ public partial class SalesProfile : Profile
     {
         ConfigureCreateSalesMappings();
         ConfigureGetSalesMappings();
+        ConfigureUpdateSalesMappings();
     }
 }

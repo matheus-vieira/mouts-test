@@ -1,10 +1,9 @@
-namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
+namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.UpdateSale;
 
 /// <summary>
-/// Represents the result of a single item after a sale update operation.
-/// Includes recalculated totals based on the latest quantities and prices.
+/// Represents a single item in the HTTP response after updating a sale.
 /// </summary>
-public class UpdateSaleItemResult
+public class UpdateSaleItemResponse
 {
     /// <summary>
     /// The unique identifier of the product.
@@ -17,7 +16,7 @@ public class UpdateSaleItemResult
     public int Quantity { get; set; }
 
     /// <summary>
-    /// The calculated total amount for this item (Quantity * UnitPrice - Discount).
+    /// The calculated total amount for this item after applying discount rules.
     /// </summary>
     public decimal TotalAmount { get; set; }
 }
