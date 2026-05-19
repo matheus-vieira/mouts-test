@@ -11,16 +11,18 @@ namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.CancelSale;
 
 public class CancelSaleHandlerTests
 {
-    private readonly ISaleRepository _repository;
+    private readonly ISaleReadRepository _readRepository;
+    private readonly ISaleUpdateRepository _updateRepository;
     private readonly ILogger<CancelSaleHandler> _logger;
     private readonly CancelSaleHandler _handler;
     private readonly Faker _faker;
 
     public CancelSaleHandlerTests()
     {
-        _repository = Substitute.For<ISaleRepository>();
+        _readRepository = Substitute.For<ISaleReadRepository>();
+        _updateRepository = Substitute.For<ISaleUpdateRepository>();
         _logger = Substitute.For<ILogger<CancelSaleHandler>>();
-        _handler = new CancelSaleHandler(_repository, _logger);
+        _handler = new CancelSaleHandler(_readRepository, _updateRepository, _logger);
         _faker = new Faker("pt_BR");
     }
 
@@ -48,7 +50,7 @@ public class CancelSaleHandlerTests
         var sale = BuildValidSale();
         var command = new CancelSaleCommand(sale.Id);
 
-        _repository
+        _readRepository
             .GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(sale);
 
@@ -59,7 +61,7 @@ public class CancelSaleHandlerTests
         result.Should().Be(MediatR.Unit.Value);
         sale.IsCancelled.Should().BeTrue();
 
-        await _repository.Received(1)
+        await _updateRepository.Received(1)
             .UpdateAsync(sale, Arg.Any<CancellationToken>());
     }
 
@@ -69,7 +71,7 @@ public class CancelSaleHandlerTests
         // Arrange
         var command = new CancelSaleCommand(Guid.NewGuid());
 
-        _repository
+        _readRepository
             .GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns((Sale?)null);
 
@@ -81,7 +83,7 @@ public class CancelSaleHandlerTests
             .ThrowAsync<KeyNotFoundException>()
             .WithMessage($"Sale with ID {command.Id} was not found");
 
-        await _repository.DidNotReceive()
+        await _updateRepository.DidNotReceive()
             .UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
     }
 
@@ -92,7 +94,7 @@ public class CancelSaleHandlerTests
         var sale = BuildValidSale();
         var command = new CancelSaleCommand(sale.Id);
 
-        _repository
+        _readRepository
             .GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
             .Returns(sale);
 
@@ -100,7 +102,7 @@ public class CancelSaleHandlerTests
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await _repository.Received(1)
+        await _updateRepository.Received(1)
             .UpdateAsync(
                 Arg.Is<Sale>(s => s.Id == sale.Id && s.IsCancelled),
                 Arg.Any<CancellationToken>());

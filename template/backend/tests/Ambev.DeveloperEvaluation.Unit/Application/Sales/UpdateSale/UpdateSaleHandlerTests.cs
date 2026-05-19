@@ -12,7 +12,8 @@ namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.UpdateSale;
 
 public class UpdateSaleHandlerTests
 {
-    private readonly ISaleRepository _repository;
+    private readonly ISaleReadRepository _readRepository;
+    private readonly ISaleUpdateRepository _updateRepository;
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateSaleHandler> _logger;
     private readonly UpdateSaleHandler _handler;
@@ -20,10 +21,11 @@ public class UpdateSaleHandlerTests
 
     public UpdateSaleHandlerTests()
     {
-        _repository = Substitute.For<ISaleRepository>();
+        _readRepository = Substitute.For<ISaleReadRepository>();
+        _updateRepository = Substitute.For<ISaleUpdateRepository>();
         _mapper = Substitute.For<IMapper>();
         _logger = Substitute.For<ILogger<UpdateSaleHandler>>();
-        _handler = new UpdateSaleHandler(_repository, _mapper, _logger);
+        _handler = new UpdateSaleHandler(_readRepository, _updateRepository, _mapper, _logger);
         _faker = new Faker("pt_BR");
     }
 
@@ -65,7 +67,7 @@ public class UpdateSaleHandlerTests
         var command = BuildValidCommand(existingSale.Id);
         var expectedResult = new UpdateSaleResult { Id = existingSale.Id };
 
-        _repository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
         _mapper.Map<UpdateSaleResult>(existingSale).Returns(expectedResult);
 
         // When
@@ -74,7 +76,7 @@ public class UpdateSaleHandlerTests
         // Then
         result.Should().NotBeNull();
         result.Id.Should().Be(existingSale.Id);
-        await _repository.Received(1).UpdateAsync(existingSale, Arg.Any<CancellationToken>());
+        await _updateRepository.Received(1).UpdateAsync(existingSale, Arg.Any<CancellationToken>());
     }
 
     [Fact(DisplayName = "Given existing sale When updating Then recalculates items and persists")]
@@ -94,7 +96,7 @@ public class UpdateSaleHandlerTests
             }
         ];
 
-        _repository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
         _mapper.Map<UpdateSaleResult>(Arg.Any<Sale>()).Returns(new UpdateSaleResult { Id = existingSale.Id });
 
         // When
@@ -111,7 +113,7 @@ public class UpdateSaleHandlerTests
     {
         // Given
         var command = BuildValidCommand();
-        _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns((Sale?)null);
+        _readRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns((Sale?)null);
 
         // When
         var act = () => _handler.Handle(command, CancellationToken.None);
@@ -129,7 +131,7 @@ public class UpdateSaleHandlerTests
         existingSale.Cancel();
         var command = BuildValidCommand(existingSale.Id);
 
-        _repository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
 
         // When
         var act = () => _handler.Handle(command, CancellationToken.None);
@@ -146,7 +148,7 @@ public class UpdateSaleHandlerTests
         var existingSale = BuildSale();
         var command = BuildValidCommand(existingSale.Id);
 
-        _repository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
         _mapper.Map<UpdateSaleResult>(Arg.Any<Sale>()).Returns(new UpdateSaleResult { Id = existingSale.Id });
 
         // When
