@@ -6,9 +6,6 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.CreateSale;
 /// </summary>
 public class CreateSaleRequest
 {
-    /// <summary>Human-readable unique sale identification.</summary>
-    public string SaleNumber { get; set; } = string.Empty;
-
     /// <summary>External ID of the customer.</summary>
     public Guid CustomerId { get; set; }
 

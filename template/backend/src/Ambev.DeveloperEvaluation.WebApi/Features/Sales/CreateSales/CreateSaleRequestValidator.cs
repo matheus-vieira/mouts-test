@@ -10,7 +10,6 @@ public class CreateSaleRequestValidator : AbstractValidator<CreateSaleRequest>
 {
     public CreateSaleRequestValidator()
     {
-        RuleFor(r => r.SaleNumber).NotEmpty().MaximumLength(50);
         RuleFor(r => r.CustomerId).NotEqual(Guid.Empty);
         RuleFor(r => r.BranchId).NotEqual(Guid.Empty);
         RuleFor(r => r.Items).NotEmpty();
