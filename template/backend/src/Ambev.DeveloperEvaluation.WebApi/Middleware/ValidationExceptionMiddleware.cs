@@ -19,6 +19,10 @@ public class ValidationExceptionMiddleware(
         {
             await HandleValidationExceptionAsync(context, ex);
         }
+        catch (KeyNotFoundException ex)
+        {
+            await HandleNotFoundExceptionAsync(context, ex);
+        }
     }
 
     private static readonly JsonSerializerOptions jsonOptions = new()
@@ -41,6 +45,20 @@ public class ValidationExceptionMiddleware(
                     Error = error.ErrorMessage,
                     Detail = error.PropertyName
                 })]
+        };
+
+        return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+    }
+
+    private static Task HandleNotFoundExceptionAsync(HttpContext context, KeyNotFoundException exception)
+    {
+        context.Response.ContentType = "application/json";
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+
+        var response = new ApiResponse
+        {
+            Success = false,
+            Message = exception.Message
         };
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));

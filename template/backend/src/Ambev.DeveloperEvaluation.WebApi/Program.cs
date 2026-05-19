@@ -27,15 +27,14 @@ public class Program
 
             builder.AddBasicHealthChecks();
             builder.Services.AddSwaggerGen();
-            
+
             builder.Services.AddDatabaseContext(builder.Configuration);
 
             builder.Services.AddJwtAuthentication(builder.Configuration);
 
-            builder.RegisterDependencies();
-
-            var autoMapperLicenseKey = builder.Configuration["AutoMapper:LicenseKey"];
-            builder.Services.AddAutoMapper(cfg => cfg.LicenseKey = autoMapperLicenseKey, typeof(Program));
+            // Register all dependencies through the IoC layer.
+            // We pass typeof(Program).Assembly so AutoMapper can scan the WebAPI's Mappings folder.
+            builder.RegisterDependencies(typeof(Program).Assembly);
 
             builder.Services.AddMediatR(cfg =>
             {

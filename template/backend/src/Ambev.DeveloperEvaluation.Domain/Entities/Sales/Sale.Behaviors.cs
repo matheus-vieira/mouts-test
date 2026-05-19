@@ -18,6 +18,27 @@ public partial class Sale
     }
 
     /// <summary>
+    /// Updates the customer and branch associations of the sale.
+    /// Both IDs and their denormalized names must be provided together
+    /// to keep the aggregate consistent.
+    /// </summary>
+    /// <param name="customerId">The new customer identifier.</param>
+    /// <param name="customerName">The denormalized customer name at update time.</param>
+    /// <param name="branchId">The new branch identifier.</param>
+    /// <param name="branchName">The denormalized branch name at update time.</param>
+    /// <exception cref="DomainException">Thrown when the sale is already cancelled.</exception>
+    public void Update(Guid customerId, string customerName, Guid branchId, string branchName)
+    {
+        if (IsCancelled)
+            throw new DomainException("Cannot update a cancelled sale.");
+
+        CustomerId = customerId;
+        CustomerName = customerName;
+        BranchId = branchId;
+        BranchName = branchName;
+    }
+
+    /// <summary>
     /// Replaces all current items with the provided collection.
     /// Discount rules are enforced by <see cref="SaleItem.Create"/> at item creation time.
     /// Total amount is recalculated after replacement.
