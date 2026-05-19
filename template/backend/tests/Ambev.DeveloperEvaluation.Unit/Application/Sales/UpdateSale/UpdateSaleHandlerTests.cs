@@ -31,7 +31,6 @@ public class UpdateSaleHandlerTests
 
     private static Sale BuildSale() =>
         Sale.Create(
-            "S001",
             DateTime.UtcNow,
             Guid.NewGuid(),
             "Customer",

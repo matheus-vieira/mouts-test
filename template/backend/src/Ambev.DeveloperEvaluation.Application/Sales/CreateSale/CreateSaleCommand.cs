@@ -18,12 +18,6 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 /// </remarks>
 public class CreateSaleCommand : IRequest<CreateSaleResult>
 {
-    /// <summary>
-    /// Human-readable unique sale identifier (e.g. "SALE-2024-0001").
-    /// Must be unique across the system.
-    /// </summary>
-    public string SaleNumber { get; set; } = string.Empty;
-
     /// <summary>External identity reference to the customer.</summary>
     public Guid CustomerId { get; set; }
 

@@ -13,7 +13,6 @@ public static class CreateSaleHandlerTestData
 
     public static CreateSaleCommand GenerateValidCommand() => new()
     {
-        SaleNumber = Faker.Random.AlphaNumeric(10),
         CustomerId = Faker.Random.Guid(),
         CustomerName = Faker.Person.FullName,
         BranchId = Faker.Random.Guid(),
@@ -43,7 +42,7 @@ public static class CreateSaleHandlerTestData
             SaleItem.Create(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice));
 
         return Sale.Create(
-            command.SaleNumber, DateTime.UtcNow,
+            DateTime.UtcNow,
             command.CustomerId, command.CustomerName,
             command.BranchId, command.BranchName,
             items);

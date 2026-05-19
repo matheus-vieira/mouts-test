@@ -5,7 +5,6 @@ using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using AutoMapper;
 using Bogus;
 using FluentAssertions;
-using FluentValidation;
 using MediatR;
 using NSubstitute;
 using Xunit;
@@ -32,20 +31,18 @@ public class CreateSaleHandlerTests
     private CreateSaleCommand BuildValidCommand(int itemCount = 1) =>
         new()
         {
-            SaleNumber = _faker.Random.AlphaNumeric(8).ToUpper(),
             CustomerId = Guid.NewGuid(),
             CustomerName = _faker.Person.FullName,
             BranchId = Guid.NewGuid(),
             BranchName = _faker.Company.CompanyName(),
-            Items = Enumerable.Range(0, itemCount)
+            Items = [.. Enumerable.Range(0, itemCount)
                 .Select(_ => new CreateSaleItemCommand
                 {
                     ProductId = Guid.NewGuid(),
                     ProductName = _faker.Commerce.ProductName(),
                     Quantity = _faker.Random.Int(1, 5),
                     UnitPrice = _faker.Random.Decimal(1, 100)
-                })
-                .ToList()
+                })]
         };
 
     [Fact(DisplayName = "Given valid command When handling Then creates sale and returns result")]
@@ -55,7 +52,6 @@ public class CreateSaleHandlerTests
         var command = BuildValidCommand();
 
         var createdSale = Sale.Create(
-            command.SaleNumber,
             DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
@@ -99,7 +95,6 @@ public class CreateSaleHandlerTests
         var command = BuildValidCommand();
 
         var createdSale = Sale.Create(
-            command.SaleNumber,
             DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
@@ -146,7 +141,6 @@ public class CreateSaleHandlerTests
         var command = BuildValidCommand();
 
         var createdSale = Sale.Create(
-            command.SaleNumber,
             DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
@@ -168,6 +162,6 @@ public class CreateSaleHandlerTests
 
         // Then
         _mapper.Received(1).Map<CreateSaleResult>(
-            Arg.Is<Sale>(s => s.SaleNumber == command.SaleNumber));
+            Arg.Is<Sale>(s => s.Id == createdSale.Id));
     }
 }

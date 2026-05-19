@@ -56,14 +56,8 @@ public class CreateSaleHandler(
                 i.Quantity,
                 i.UnitPrice));
 
-        var exists = await repository.ExistsBySaleNumberAsync(command.SaleNumber, cancellationToken);
-
-        if (exists)
-            throw new ValidationException($"A sale with the number '{command.SaleNumber}' already exists.");
-
         // Build aggregate — Sale.Create enforces non-empty items and calculates total
         var sale = Sale.Create(
-            command.SaleNumber,
             DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,

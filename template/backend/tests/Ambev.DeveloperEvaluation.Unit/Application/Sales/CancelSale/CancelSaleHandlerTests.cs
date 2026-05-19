@@ -28,7 +28,6 @@ public class CancelSaleHandlerTests
 
     private Sale BuildValidSale() =>
         Sale.Create(
-            saleNumber: _faker.Random.AlphaNumeric(8).ToUpper(),
             saleDate: DateTime.UtcNow,
             customerId: Guid.NewGuid(),
             customerName: _faker.Person.FullName,

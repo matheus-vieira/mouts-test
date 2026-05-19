@@ -22,23 +22,6 @@ public class CreateSaleCommandValidatorTests
         result.Errors.Should().BeEmpty();
     }
 
-    [Fact(DisplayName = "Given empty sale number When validating Then should be invalid")]
-    public void Validate_EmptySaleNumber_ShouldBeInvalid()
-    {
-        // Given
-        var command = CreateValidCommand();
-        command.SaleNumber = string.Empty;
-
-        // When
-        var result = _validator.Validate(command);
-
-        // Then
-        result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainSingle(x =>
-            x.PropertyName == nameof(CreateSaleCommand.SaleNumber) &&
-            x.ErrorMessage == "Sale number is required.");
-    }
-
     [Fact(DisplayName = "Given empty customer id When validating Then should be invalid")]
     public void Validate_EmptyCustomerId_ShouldBeInvalid()
     {
@@ -213,7 +196,6 @@ public class CreateSaleCommandValidatorTests
     {
         return new CreateSaleCommand
         {
-            SaleNumber = "SALE-001",
             CustomerId = Guid.NewGuid(),
             CustomerName = "Customer",
             BranchId = Guid.NewGuid(),
