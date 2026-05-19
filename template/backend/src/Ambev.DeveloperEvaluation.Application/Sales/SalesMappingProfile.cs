@@ -25,6 +25,8 @@ public class SalesMappingProfile : Profile
                 src.BranchName,
                 src.Items.Select(i => SaleItem.Create(i.ProductId, i.ProductName, i.Quantity, i.UnitPrice))
             ));
+
+        CreateMap<CreateSaleItemCommand, SaleItem>();
         CreateMap<Sale, CreateSaleResult>();
 
         // GetSale
