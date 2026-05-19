@@ -1,62 +1,131 @@
 using Ambev.DeveloperEvaluation.ORM;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using Xunit;
 
 namespace Ambev.DeveloperEvaluation.Integration.Common;
 
 /// <summary>
-/// Base class for all integration tests that need database access.
-/// Provides shared DbContext configuration and helper methods.
-/// </summary>
-/// <remarks>
-/// Inherit from this class in test classes that are decorated with [Collection(DatabaseCollection.Name)].
-/// The fixture is injected via the constructor and provides the connection string for DbContext creation.
+/// Base class for integration tests with shared PostgreSQL container.
 /// 
-/// For schema-isolated tests, derived fixtures can override <see cref="GetSchemaName"/> to return
-/// a dedicated schema name, enabling parallel test execution.
-/// </remarks>
-public abstract class IntegrationTestBase : IDisposable
+/// Provides:
+///   - Pre-configured <see cref="DefaultContext"/> connected to the shared container
+///   - Automatic database cleanup between test classes via TRUNCATE CASCADE
+///   - Helper method <see cref="CreateNewContext"/> for verifying persistence
+/// 
+/// Migration from old pattern:
+///   BEFORE: class MyTests : IntegrationTestBase          (no constructor args)
+///   AFTER:  class MyTests : IntegrationTestBase          (constructor receives fixture)
+///           [Collection(DatabaseCollection.Name)]        (add collection attribute)
+///           MyTests(PostgreSqlContainerFixture fixture)   (pass fixture to base)
+///             : base(fixture) { }
+/// </summary>
+public abstract class IntegrationTestBase : IAsyncLifetime
 {
-    private readonly PostgreSqlContainerFixture _fixture;
-    private DefaultContext? _context;
+    private readonly PostgreSqlContainerFixture _containerFixture;
+    private IServiceScope _scope = null!;
 
     /// <summary>
-    /// Gets the DbContext for the current test.
-    /// Lazily initialized on first access.
+    /// Gets the database context for the current test.
+    /// Configured with sensitive data logging and detailed errors for test diagnostics.
     /// </summary>
-    protected DefaultContext Context => _context ??= CreateNewContext();
+    protected DefaultContext Context { get; private set; } = null!;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="IntegrationTestBase"/>.
+    /// Initializes a new instance with the shared container fixture.
     /// </summary>
-    /// <param name="fixture">The PostgreSQL container fixture providing the connection string.</param>
-    protected IntegrationTestBase(PostgreSqlContainerFixture fixture)
+    /// <param name="containerFixture">Shared PostgreSQL container instance injected by xUnit.</param>
+    protected IntegrationTestBase(PostgreSqlContainerFixture containerFixture)
     {
-        _fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
+        _containerFixture = containerFixture;
     }
 
     /// <summary>
-    /// Creates a new DbContext instance configured for the test database.
-    /// Each call creates a fresh context to avoid tracking conflicts.
+    /// Initializes the database context and ensures schema is created.
+    /// Called before each test class runs.
+    /// 
+    /// The first test class to run will create the schema via EnsureCreatedAsync().
+    /// Subsequent test classes reuse the existing schema (EnsureCreatedAsync is a no-op
+    /// if the database already exists).
     /// </summary>
-    /// <returns>A new <see cref="DefaultContext"/> connected to the test database.</returns>
-    protected DefaultContext CreateNewContext()
+    public async Task InitializeAsync()
     {
-        var optionsBuilder = new DbContextOptionsBuilder<DefaultContext>();
-        optionsBuilder.UseNpgsql(_fixture.ConnectionString);
+        var services = new ServiceCollection();
 
-        var context = new DefaultContext(optionsBuilder.Options);
-
-        // Apply schema if specified by derived fixture
         var schema = GetSchemaName();
+        var connectionString = _containerFixture.ConnectionString;
+
+        // Append search_path to connection string if schema is specified
         if (!string.IsNullOrEmpty(schema))
         {
-            context.Database.ExecuteSqlRaw($"SET search_path TO {schema};");
+            var builder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                SearchPath = schema
+            };
+            connectionString = builder.ToString();
         }
 
-        // Ensure database and tables are created for the current schema
-        context.Database.EnsureCreated();
+        services.AddDbContext<DefaultContext>(options =>
+            options.UseNpgsql(connectionString)
+                   .EnableSensitiveDataLogging()
+                   .EnableDetailedErrors());
 
-        return context;
+        var provider = services.BuildServiceProvider();
+        _scope = provider.CreateScope();
+        Context = _scope.ServiceProvider.GetRequiredService<DefaultContext>();
+
+        // Ensure database schema exists
+        // First test class: creates tables, indexes, constraints
+        // Subsequent test classes: no-op (schema already exists)
+        await Context.Database.EnsureCreatedAsync();
+    }
+
+    /// <summary>
+    /// Cleans up the database context after each test class.
+    /// The container remains running for the next test class.
+    /// Data is cleaned via TRUNCATE CASCADE but schema is preserved.
+    /// </summary>
+    public async Task DisposeAsync()
+    {
+        // Clean all data but keep schema for next test class
+        await CleanDatabaseAsync();
+
+        await Context.DisposeAsync();
+        _scope.Dispose();
+    }
+
+    /// <summary>
+    /// Creates a new DbContext instance with the same connection string.
+    /// Use this to verify data persistence by bypassing EF Core's change tracker cache.
+    /// 
+    /// Example usage:
+    /// <code>
+    ///   await repository.CreateAsync(sale, ct);
+    ///   using var freshContext = CreateNewContext();
+    ///   var persisted = await freshContext.Sales.FindAsync(sale.Id);
+    ///   persisted.Should().NotBeNull();
+    /// </code>
+    /// </summary>
+    protected DefaultContext CreateNewContext()
+    {
+        var schema = GetSchemaName();
+        var connectionString = _containerFixture.ConnectionString;
+
+        // Append search_path to connection string if schema is specified
+        if (!string.IsNullOrEmpty(schema))
+        {
+            var builder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                SearchPath = schema
+            };
+            connectionString = builder.ToString();
+        }
+
+        var options = new DbContextOptionsBuilder<DefaultContext>()
+            .UseNpgsql(connectionString)
+            .Options;
+        return new DefaultContext(options);
     }
 
     /// <summary>
@@ -66,16 +135,28 @@ public abstract class IntegrationTestBase : IDisposable
     /// <returns>The schema name, or null/empty for the default public schema.</returns>
     protected virtual string? GetSchemaName()
     {
-        return _fixture.Schema;
+        return _containerFixture.Schema;
     }
 
     /// <summary>
-    /// Disposes the DbContext if it was created.
-    /// Called automatically after each test completes.
+    /// Cleans all data from the database while preserving the schema.
+    /// Executed after each test class to provide a clean slate for the next class.
+    /// 
+    /// Uses TRUNCATE CASCADE for performance (~100ms vs ~2-3s for drop/recreate).
+    /// CASCADE ensures dependent tables (SaleItems) are also truncated.
     /// </summary>
-    public void Dispose()
+    private async Task CleanDatabaseAsync()
     {
-        _context?.Dispose();
-        GC.SuppressFinalize(this);
+        var schema = GetSchemaName();
+        var tableName = string.IsNullOrEmpty(schema) 
+            ? "\"Sales\"" 
+            : $"{schema}.\"Sales\"";
+
+        // TRUNCATE is faster than DELETE — it doesn't scan rows, just deallocates pages
+        // CASCADE handles dependent tables (SaleItems FK → Sales)
+        await Context.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {tableName} CASCADE");
+
+        // If additional tables are added in the future, add them here:
+        // await Context.Database.ExecuteSqlRawAsync($"TRUNCATE TABLE {schema}.\"OtherTable\" CASCADE");
     }
 }
