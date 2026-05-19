@@ -25,37 +25,32 @@ public class GetSaleHandlerTests
     public async Task Handle_ExistingSale_ReturnsSuccessResponse()
     {
         // Given
-        var id = Guid.NewGuid();
-        var command = new GetSaleCommand(id);
-        var sale = Sale.Create(
-            "S001", DateTime.UtcNow, Guid.NewGuid(), "Customer", Guid.NewGuid(), "Branch",
-            [SaleItem.Create(Guid.NewGuid(), "Product", 1, 10m)]);
+        var saleId = Guid.NewGuid();
+        var command = new GetSaleCommand(saleId);
+        var existingSale = Sale.Create("S001", DateTime.UtcNow, Guid.NewGuid(), "Customer", Guid.NewGuid(), "Branch", 
+            [SaleItem.Create(Guid.NewGuid(), "Product", 2, 50m)]);
 
-        var expectedResult = new GetSaleResult { Id = id };
+        var expectedResult = new GetSaleResult { Id = saleId, SaleNumber = "S001" };
 
-        _repository.GetByIdAsync(id, Arg.Any<CancellationToken>())
-            .Returns(sale);
-
-        _mapper.Map<GetSaleResult>(sale).Returns(expectedResult);
+        _repository.GetByIdAsync(saleId, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _mapper.Map<GetSaleResult>(existingSale).Returns(expectedResult);
 
         // When
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Then
         result.Should().NotBeNull();
-        result.Id.Should().Be(expectedResult.Id);
-        await _repository.Received(1).GetByIdAsync(id, Arg.Any<CancellationToken>());
+        result.Id.Should().Be(saleId);
+        await _repository.Received(1).GetByIdAsync(saleId, Arg.Any<CancellationToken>());
     }
 
     [Fact(DisplayName = "Given non-existing sale When retrieving Then throws KeyNotFoundException")]
     public async Task Handle_NonExistingSale_ThrowsKeyNotFoundException()
     {
         // Given
-        var id = Guid.NewGuid();
-        var command = new GetSaleCommand(id);
-
-        _repository.GetByIdAsync(id, Arg.Any<CancellationToken>())
-            .Returns((Sale?)null);
+        var saleId = Guid.NewGuid();
+        var command = new GetSaleCommand(saleId);
+        _repository.GetByIdAsync(saleId, Arg.Any<CancellationToken>()).Returns((Sale?)null);
 
         // When
         var act = () => _handler.Handle(command, CancellationToken.None);
