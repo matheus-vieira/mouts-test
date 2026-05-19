@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
+using Ambev.DeveloperEvaluation.Domain.Exceptions;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.CancelSale;
 
@@ -76,5 +77,30 @@ public class CancelSaleHandlerTests
             .UpdateAsync(
                 Arg.Is<Sale>(s => s.Id == sale.Id && s.IsCancelled),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact(DisplayName = "Given already-cancelled sale When cancelling Then throws DomainException")]
+    public async Task Handle_AlreadyCancelledSale_ThrowsDomainException()
+    {
+        // Arrange
+        var sale = SaleEventTestData.GenerateValidSale();
+        sale.Cancel(); // ← Pre-cancel the sale (IsCancelled = true)
+        var command = new CancelSaleCommand(sale.Id);
+
+        _readRepository
+            .GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns(sale);
+
+        // Act
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<DomainException>()
+            .WithMessage("Sale is already cancelled.");
+
+        // Verify repository was NOT called (exception thrown before persistence)
+        await _updateRepository.DidNotReceive()
+            .UpdateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
     }
 }
