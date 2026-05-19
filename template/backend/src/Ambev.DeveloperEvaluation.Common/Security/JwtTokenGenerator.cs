@@ -9,19 +9,11 @@ namespace Ambev.DeveloperEvaluation.Common.Security;
 /// <summary>
 /// Implementation of JWT (JSON Web Token) generator.
 /// </summary>
-public class JwtTokenGenerator : IJwtTokenGenerator
+/// <param name="configuration">Application configuration containing the necessary keys for token generation.</param>
+public class JwtTokenGenerator(
+    IConfiguration configuration
+) : IJwtTokenGenerator
 {
-    private readonly IConfiguration _configuration;
-
-    /// <summary>
-    /// Initializes a new instance of the JWT token generator.
-    /// </summary>
-    /// <param name="configuration">Application configuration containing the necessary keys for token generation.</param>
-    public JwtTokenGenerator(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
     /// <summary>
     /// Generates a JWT token for a specific user.
     /// </summary>
@@ -36,10 +28,14 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     /// The token is valid for 8 hours from the moment of generation.
     /// </remarks>
     /// <exception cref="ArgumentNullException">Thrown when user or secret key is not provided.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when JWT configuration is missing.</exception>
     public string GenerateToken(IUser user)
     {
+        var secretKey = configuration["Jwt:SecretKey"] 
+            ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
+
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:SecretKey"]);
+        var key = Encoding.ASCII.GetBytes(secretKey);
 
         var claims = new[]
         {
