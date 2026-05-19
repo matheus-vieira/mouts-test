@@ -21,5 +21,5 @@ public class SaleCreateRepository(DefaultContext context)
 
     /// <inheritdoc/>
     public async Task<bool> ExistsBySaleNumberAsync(string saleNumber, CancellationToken cancellationToken)
-        => await context.Sales.AnyAsync(x => x.SaleNumber == saleNumber, cancellationToken);
+        => await Table.AnyAsync(x => x.SaleNumber == saleNumber, cancellationToken);
 }
