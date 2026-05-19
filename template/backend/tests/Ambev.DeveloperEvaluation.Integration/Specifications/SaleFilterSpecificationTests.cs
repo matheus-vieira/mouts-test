@@ -16,7 +16,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Specifications;
 /// translate to correct PostgreSQL queries (LIKE, timestamp comparison, boolean filtering, numeric ranges).
 /// Unlike unit tests, these catch provider-specific translation failures.
 /// </remarks>
-public class SaleFilterSpecificationTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleFilterSpecificationTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>Creates a <see cref="SaleCreateRepository"/> for seeding test data.</summary>
     private SaleCreateRepository CreateCreateRepository() => new(Context);

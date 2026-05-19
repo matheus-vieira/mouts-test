@@ -15,7 +15,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Repositories;
 /// Test data is seeded via <see cref="SaleCreateRepository.CreateAsync"/> before each test.
 /// Read operations are tested against the same PostgreSQL container.
 /// </remarks>
-public class SaleReadRepositoryTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleReadRepositoryTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>Creates a <see cref="SaleCreateRepository"/> for seeding test data.</summary>
     private SaleCreateRepository CreateCreateRepository() => new(Context);

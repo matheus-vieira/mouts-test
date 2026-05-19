@@ -15,7 +15,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Repositories;
 /// Each test creates data via <see cref="SaleCreateRepository.CreateAsync"/> and verifies
 /// persistence using a separate DbContext to avoid EF Core tracking cache.
 /// </remarks>
-public class SaleCreateRepositoryTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleCreateRepositoryTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>
     /// Creates a new <see cref="SaleCreateRepository"/> using the test DbContext.

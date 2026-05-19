@@ -20,7 +20,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Repositories;
 /// Tests use a separate DbContext (<see cref="IntegrationTestBase.CreateNewContext"/>)
 /// to verify persistence without EF Core tracking cache interference.
 /// </remarks>
-public class SaleUpdateRepositoryTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleUpdateRepositoryTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>Creates a <see cref="SaleCreateRepository"/> for seeding test data.</summary>
     private SaleCreateRepository CreateCreateRepository() => new(Context);

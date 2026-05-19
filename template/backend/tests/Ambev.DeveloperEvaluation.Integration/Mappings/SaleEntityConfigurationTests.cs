@@ -20,7 +20,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Mappings;
 ///   <item>Verifying cascade delete behavior with real FK ON DELETE CASCADE</item>
 /// </list>
 /// </remarks>
-public class SaleEntityConfigurationTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleEntityConfigurationTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>Creates a <see cref="SaleCreateRepository"/> for seeding test data.</summary>
     private SaleCreateRepository CreateCreateRepository() => new(Context);

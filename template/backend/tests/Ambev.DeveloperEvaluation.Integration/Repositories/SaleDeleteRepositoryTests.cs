@@ -11,7 +11,10 @@ namespace Ambev.DeveloperEvaluation.Integration.Repositories;
 /// Verifies that delete operations correctly remove sales from a real PostgreSQL database
 /// and that cascade delete removes associated items via FK ON DELETE CASCADE.
 /// </summary>
-public class SaleDeleteRepositoryTests : IntegrationTestBase
+[Collection(DatabaseCollection.Name)]
+public class SaleDeleteRepositoryTests(
+    PostgreSqlContainerFixture containerFixture
+) : IntegrationTestBase(containerFixture)
 {
     /// <summary>Creates a <see cref="SaleCreateRepository"/> for seeding test data.</summary>
     private SaleCreateRepository CreateCreateRepository() => new(Context);
