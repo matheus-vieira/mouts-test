@@ -17,7 +17,6 @@ public partial class Sale
     /// <param name="items">At least one sale item is required.</param>
     /// <exception cref="DomainException">Thrown when items collection is empty.</exception>
     public static Sale Create(
-        string saleNumber,
         DateTime saleDate,
         Guid customerId,
         string customerName,
@@ -30,10 +29,12 @@ public partial class Sale
         if (itemList.Count == 0)
             throw new DomainException("A sale must contain at least one item.");
 
+        saleDate = DateTime.SpecifyKind(saleDate, DateTimeKind.Utc);
+
         var sale = new Sale
         {
             Id = Guid.NewGuid(),
-            SaleNumber = saleNumber,
+            SaleNumber = GenerateSaleNumber(),
             SaleDate = saleDate,
             CustomerId = customerId,
             CustomerName = customerName,
@@ -46,4 +47,11 @@ public partial class Sale
         sale.RecalculateTotal();
         return sale;
     }
+    
+    /// <summary>
+    /// Generates a temporary sale number based on UTC timestamp.
+    /// TODO: Replace with sequential daily counter (SALE-YYYY-MM-DD-9999).
+    /// </summary>
+    private static string GenerateSaleNumber()
+        => $"SALE-{DateTime.UtcNow:yyyyMMdd-HHmmssfff}";
 }

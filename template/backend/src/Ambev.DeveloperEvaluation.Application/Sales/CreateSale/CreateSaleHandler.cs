@@ -58,8 +58,7 @@ public class CreateSaleHandler(
 
         // Build aggregate — Sale.Create enforces non-empty items and calculates total
         var sale = Sale.Create(
-            command.SaleNumber,
-            command.SaleDate,
+            DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
             command.BranchId,

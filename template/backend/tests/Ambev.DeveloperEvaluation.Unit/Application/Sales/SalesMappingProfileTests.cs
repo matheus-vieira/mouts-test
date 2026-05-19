@@ -33,8 +33,6 @@ public class SalesMappingProfileTests
         // Given
         var command = new CreateSaleCommand
         {
-            SaleNumber = "S001",
-            SaleDate = DateTime.UtcNow,
             CustomerId = Guid.NewGuid(),
             CustomerName = "Customer",
             BranchId = Guid.NewGuid(),
@@ -56,7 +54,7 @@ public class SalesMappingProfileTests
 
         // Then
         result.Should().NotBeNull();
-        result.SaleNumber.Should().Be(command.SaleNumber);
+        result.SaleNumber.Should().NotBeNullOrWhiteSpace();
         result.CustomerName.Should().Be(command.CustomerName);
         result.BranchName.Should().Be(command.BranchName);
         result.Items.Should().HaveCount(1);
@@ -67,7 +65,6 @@ public class SalesMappingProfileTests
     {
         // Given
         var sale = Sale.Create(
-            "S001",
             DateTime.UtcNow,
             Guid.NewGuid(),
             "Customer",
@@ -90,7 +87,6 @@ public class SalesMappingProfileTests
     {
         // Given
         var sale = Sale.Create(
-            "S001",
             DateTime.UtcNow,
             Guid.NewGuid(),
             "Customer",
@@ -114,7 +110,6 @@ public class SalesMappingProfileTests
     {
         // Given
         var sale = Sale.Create(
-            "S001",
             DateTime.UtcNow,
             Guid.NewGuid(),
             "Customer",
@@ -130,5 +125,6 @@ public class SalesMappingProfileTests
         // Then
         result.Should().NotBeNull();
         result.Id.Should().Be(sale.Id);
+        result.SaleNumber.Should().Be(sale.SaleNumber);
     }
 }

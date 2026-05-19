@@ -27,7 +27,7 @@ public class GetSaleHandlerTests
         // Given
         var saleId = Guid.NewGuid();
         var command = new GetSaleCommand(saleId);
-        var existingSale = Sale.Create("S001", DateTime.UtcNow, Guid.NewGuid(), "Customer", Guid.NewGuid(), "Branch", 
+        var existingSale = Sale.Create(DateTime.UtcNow, Guid.NewGuid(), "Customer", Guid.NewGuid(), "Branch", 
             [SaleItem.Create(Guid.NewGuid(), "Product", 2, 50m)]);
 
         var expectedResult = new GetSaleResult { Id = saleId, SaleNumber = "S001" };

@@ -14,11 +14,11 @@ public class SaleTests
     public void Given_ValidItems_When_CreatingSale_Then_TotalAmountIsCorrect()
     {
         // Arrange
-        var (SaleNumber, SaleDate, CustomerId, CustomerName, BranchId, BranchName, Items) = SaleTestData.ValidWithItems(3);
+        var (SaleDate, CustomerId, CustomerName, BranchId, BranchName, Items) = SaleTestData.ValidWithItems(3);
 
         // Act
         var sale = Sale.Create(
-            SaleNumber, SaleDate,
+            SaleDate,
             CustomerId, CustomerName,
             BranchId, BranchName,
             Items);
@@ -35,7 +35,7 @@ public class SaleTests
 
         // Act & Assert
         Assert.Throws<DomainException>(() => Sale.Create(
-            data.SaleNumber, data.SaleDate,
+            data.SaleDate,
             data.CustomerId, data.CustomerName,
             data.BranchId, data.BranchName,
             data.Items));

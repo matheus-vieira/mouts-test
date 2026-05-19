@@ -17,14 +17,6 @@ public class CreateSaleCommandValidator : AbstractValidator<CreateSaleCommand>
 {
     public CreateSaleCommandValidator()
     {
-        RuleFor(x => x.SaleNumber)
-            .NotEmpty()
-            .WithMessage("Sale number is required.");
-
-        RuleFor(x => x.SaleDate)
-            .NotEqual(default(DateTime))
-            .WithMessage("Sale date is required.");
-
         RuleFor(x => x.CustomerId)
             .NotEqual(Guid.Empty)
             .WithMessage("Customer id is required.");

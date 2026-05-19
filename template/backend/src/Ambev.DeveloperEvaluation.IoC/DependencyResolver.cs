@@ -8,6 +8,9 @@ public static class DependencyResolver
     public static void RegisterDependencies(this WebApplicationBuilder builder)
     {
         new ApplicationModuleInitializer().Initialize(builder);
+        new AutoMapperModuleInitializer().Initialize(builder);
+        new MediatRModuleInitializer().Initialize(builder);
+        new ValidationModuleInitializer().Initialize(builder);
         new InfrastructureModuleInitializer().Initialize(builder);
         new WebApiModuleInitializer().Initialize(builder);
     }

@@ -11,10 +11,6 @@ public class SaleValidator : AbstractValidator<Sale>
 {
     public SaleValidator()
     {
-        RuleFor(x => x.SaleNumber)
-            .NotEmpty()
-            .WithMessage("Sale number is required.");
-
         RuleFor(x => x.CustomerName)
             .NotEmpty()
             .WithMessage("Customer name is required.");

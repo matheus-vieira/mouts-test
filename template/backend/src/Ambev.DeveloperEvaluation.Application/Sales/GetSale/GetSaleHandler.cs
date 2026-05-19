@@ -8,7 +8,7 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 /// Handler for retrieving a sale by ID.
 /// </summary>
 public class GetSaleHandler(
-    ISaleRepository repository,
+    ISaleReadRepository repository,
     IMapper mapper) : IRequestHandler<GetSaleCommand, GetSaleResult>
 {
     public async Task<GetSaleResult> Handle(GetSaleCommand command, CancellationToken cancellationToken)
