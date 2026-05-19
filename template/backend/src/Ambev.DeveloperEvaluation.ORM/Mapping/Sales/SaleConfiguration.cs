@@ -40,6 +40,6 @@ public class SaleConfiguration : IEntityTypeConfiguration<Sale>
             .WithOne()
             .HasForeignKey("SaleId")
             .OnDelete(DeleteBehavior.Cascade)
-            .Metadata.PrincipalToDependent.SetPropertyAccessMode(PropertyAccessMode.Field);
+            .Metadata.PrincipalToDependent?.SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }
