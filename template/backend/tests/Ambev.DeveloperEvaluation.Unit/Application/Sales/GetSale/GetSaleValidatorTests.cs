@@ -13,7 +13,7 @@ public class GetSaleValidatorTests
         _validator = new GetSaleValidator();
     }
 
-    [Fact(DisplayName = "Given valid ID When validating Then passes validation")]
+    [Fact(DisplayName = "Given valid sale id When validating Then passes validation")]
     public void Validate_ValidId_ShouldPass()
     {
         // Given
@@ -26,7 +26,7 @@ public class GetSaleValidatorTests
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact(DisplayName = "Given empty ID When validating Then fails validation")]
+    [Fact(DisplayName = "Given empty sale id When validating Then fails validation")]
     public void Validate_EmptyId_ShouldFail()
     {
         // Given
