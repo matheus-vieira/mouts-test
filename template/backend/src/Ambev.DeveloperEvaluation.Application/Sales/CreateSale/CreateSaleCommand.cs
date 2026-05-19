@@ -24,9 +24,6 @@ public class CreateSaleCommand : IRequest<CreateSaleResult>
     /// </summary>
     public string SaleNumber { get; set; } = string.Empty;
 
-    /// <summary>Date and time when the sale is being registered.</summary>
-    public DateTime SaleDate { get; set; }
-
     /// <summary>External identity reference to the customer.</summary>
     public Guid CustomerId { get; set; }
 

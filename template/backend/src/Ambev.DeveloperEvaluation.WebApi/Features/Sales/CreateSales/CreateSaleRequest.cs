@@ -9,9 +9,6 @@ public class CreateSaleRequest
     /// <summary>Human-readable unique sale identification.</summary>
     public string SaleNumber { get; set; } = string.Empty;
 
-    /// <summary>Date and time of the sale transaction.</summary>
-    public DateTime SaleDate { get; set; }
-
     /// <summary>External ID of the customer.</summary>
     public Guid CustomerId { get; set; }
 

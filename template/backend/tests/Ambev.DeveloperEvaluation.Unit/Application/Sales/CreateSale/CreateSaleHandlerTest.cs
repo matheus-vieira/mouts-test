@@ -33,7 +33,6 @@ public class CreateSaleHandlerTests
         new()
         {
             SaleNumber = _faker.Random.AlphaNumeric(8).ToUpper(),
-            SaleDate = DateTime.UtcNow,
             CustomerId = Guid.NewGuid(),
             CustomerName = _faker.Person.FullName,
             BranchId = Guid.NewGuid(),
@@ -57,7 +56,7 @@ public class CreateSaleHandlerTests
 
         var createdSale = Sale.Create(
             command.SaleNumber,
-            command.SaleDate,
+            DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
             command.BranchId,
@@ -101,7 +100,7 @@ public class CreateSaleHandlerTests
 
         var createdSale = Sale.Create(
             command.SaleNumber,
-            command.SaleDate,
+            DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
             command.BranchId,
@@ -148,7 +147,7 @@ public class CreateSaleHandlerTests
 
         var createdSale = Sale.Create(
             command.SaleNumber,
-            command.SaleDate,
+            DateTime.UtcNow,
             command.CustomerId,
             command.CustomerName,
             command.BranchId,

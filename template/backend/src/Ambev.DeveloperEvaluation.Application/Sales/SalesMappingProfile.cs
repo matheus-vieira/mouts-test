@@ -18,7 +18,7 @@ public class SalesMappingProfile : Profile
         CreateMap<CreateSaleCommand, Sale>()
             .ConstructUsing(src => Sale.Create(
                 src.SaleNumber, 
-                src.SaleDate, 
+                DateTime.UtcNow,
                 src.CustomerId, 
                 src.CustomerName, 
                 src.BranchId, 

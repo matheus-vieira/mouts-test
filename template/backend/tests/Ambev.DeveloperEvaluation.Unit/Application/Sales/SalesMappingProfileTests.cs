@@ -34,7 +34,6 @@ public class SalesMappingProfileTests
         var command = new CreateSaleCommand
         {
             SaleNumber = "S001",
-            SaleDate = DateTime.UtcNow,
             CustomerId = Guid.NewGuid(),
             CustomerName = "Customer",
             BranchId = Guid.NewGuid(),

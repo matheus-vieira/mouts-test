@@ -30,6 +30,8 @@ public partial class Sale
         if (itemList.Count == 0)
             throw new DomainException("A sale must contain at least one item.");
 
+        saleDate = DateTime.SpecifyKind(saleDate, DateTimeKind.Utc);
+
         var sale = new Sale
         {
             Id = Guid.NewGuid(),
