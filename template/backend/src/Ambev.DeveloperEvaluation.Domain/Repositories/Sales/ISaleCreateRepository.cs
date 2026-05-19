@@ -9,4 +9,7 @@ public interface ISaleCreateRepository
 {
     /// <summary>Persists a new sale to the data store.</summary>
     Task<Sale> CreateAsync(Sale sale, CancellationToken cancellationToken = default);
+
+    /// <summary>Checks if a sale with the given sale number already exists in the data store.</summary>
+    Task<bool> ExistsBySaleNumberAsync(string saleNumber, CancellationToken cancellationToken);
 }

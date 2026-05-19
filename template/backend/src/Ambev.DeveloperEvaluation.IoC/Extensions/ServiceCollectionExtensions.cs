@@ -16,7 +16,8 @@ public static class ServiceCollectionExtensions
             {
                 cfg.LicenseKey = autoMapperLicenseKey;
             },
-            AppDomain.CurrentDomain.GetAssemblies());
+            typeof(Application.ApplicationLayer).Assembly
+        );
 
         return services;
     }

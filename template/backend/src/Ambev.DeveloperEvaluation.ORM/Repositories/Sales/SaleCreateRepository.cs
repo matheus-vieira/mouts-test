@@ -1,5 +1,6 @@
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
+using Microsoft.EntityFrameworkCore;
 
 namespace Ambev.DeveloperEvaluation.ORM.Repositories.Sales;
 
@@ -17,4 +18,8 @@ public class SaleCreateRepository(DefaultContext context)
         await SaveChangesAsync(cancellationToken);
         return sale;
     }
+
+    /// <inheritdoc/>
+    public async Task<bool> ExistsBySaleNumberAsync(string saleNumber, CancellationToken cancellationToken)
+        => await context.Sales.AnyAsync(x => x.SaleNumber == saleNumber, cancellationToken);
 }
