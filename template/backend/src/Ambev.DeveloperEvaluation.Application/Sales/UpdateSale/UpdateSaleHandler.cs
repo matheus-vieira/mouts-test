@@ -7,7 +7,8 @@ using Microsoft.Extensions.Logging;
 namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 
 public partial class UpdateSaleHandler(
-    ISaleRepository repository,
+    ISaleReadRepository readRepository,
+    ISaleUpdateRepository updateRepository,
     IMapper mapper,
     ILogger<UpdateSaleHandler> logger) : IRequestHandler<UpdateSaleCommand, UpdateSaleResult>
 {
@@ -15,7 +16,7 @@ public partial class UpdateSaleHandler(
     {
         LogUpdateInitiated(logger, command.Id);
 
-        var sale = await repository.GetByIdAsync(command.Id, cancellationToken)
+        var sale = await readRepository.GetByIdAsync(command.Id, cancellationToken)
             ?? throw new KeyNotFoundException($"Sale with ID {command.Id} was not found");
 
         if (sale.IsCancelled)
@@ -27,7 +28,7 @@ public partial class UpdateSaleHandler(
 
         sale.UpdateItems(newItems);
 
-        await repository.UpdateAsync(sale, cancellationToken);
+        await updateRepository.UpdateAsync(sale, cancellationToken);
 
         LogUpdateSuccess(logger, sale.Id, sale.Items.Count);
 
