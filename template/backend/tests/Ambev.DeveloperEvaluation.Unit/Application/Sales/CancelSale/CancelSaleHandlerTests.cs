@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 using Ambev.DeveloperEvaluation.Domain.Exceptions;
+using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.CancelSale;
 
@@ -15,6 +16,7 @@ public class CancelSaleHandlerTests
     private readonly ISaleReadRepository _readRepository;
     private readonly ISaleUpdateRepository _updateRepository;
     private readonly ILogger<CancelSaleHandler> _logger;
+    private readonly IMediator _mediator;
     private readonly CancelSaleHandler _handler;
 
     public CancelSaleHandlerTests()
@@ -22,7 +24,8 @@ public class CancelSaleHandlerTests
         _readRepository = Substitute.For<ISaleReadRepository>();
         _updateRepository = Substitute.For<ISaleUpdateRepository>();
         _logger = Substitute.For<ILogger<CancelSaleHandler>>();
-        _handler = new CancelSaleHandler(_readRepository, _updateRepository, _logger);
+        _mediator = Substitute.For<IMediator>();
+        _handler = new CancelSaleHandler(_readRepository, _updateRepository, _mediator, _logger);
     }
 
     [Fact]

@@ -1,37 +1,76 @@
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
-using Bogus;
 
 namespace Ambev.DeveloperEvaluation.Unit.Application.TestData;
 
+/// <summary>
+/// Provides test data builders for sale event testing.
+/// </summary>
 public static class SaleEventTestData
 {
-    private static readonly Faker Faker = new();
-
+    /// <summary>
+    /// Generates a valid sale with default test data.
+    /// </summary>
     public static Sale GenerateValidSale()
     {
-        var items = new List<SaleItem>
+        var items = new[]
         {
-            SaleItem.Create(
-                Faker.Random.Guid(),
-                Faker.Commerce.ProductName(),
-                Faker.Random.Int(1, 3),
-                Faker.Random.Decimal(1, 500)
-            ),
-            SaleItem.Create(
-                Faker.Random.Guid(),
-                Faker.Commerce.ProductName(),
-                Faker.Random.Int(1, 3),
-                Faker.Random.Decimal(1, 500)
-            )
+            SaleItem.Create(Guid.NewGuid(), "Product A", 5, 100m),
+            SaleItem.Create(Guid.NewGuid(), "Product B", 10, 50m)
         };
 
         return Sale.Create(
-            DateTime.UtcNow,
-            Faker.Random.Guid(),
-            Faker.Person.FullName,
-            Faker.Random.Guid(),
-            Faker.Company.CompanyName(),
-            items
-        );
+            saleDate: DateTime.UtcNow,
+            customerId: Guid.NewGuid(),
+            customerName: "John Doe",
+            branchId: Guid.NewGuid(),
+            branchName: "Downtown Store",
+            items: items);
+    }
+
+    /// <summary>
+    /// Generates a valid sale with a specified number of items.
+    /// </summary>
+    /// <param name="itemCount">Number of items to include in the sale.</param>
+    public static Sale GenerateValidSaleWithItems(int itemCount)
+    {
+        var items = new List<SaleItem>();
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            items.Add(SaleItem.Create(
+                Guid.NewGuid(),
+                $"Product {i + 1}",
+                quantity: 5 + i,
+                unitPrice: 100m + (i * 10)));
+        }
+
+        return Sale.Create(
+            saleDate: DateTime.UtcNow,
+            customerId: Guid.NewGuid(),
+            customerName: "Jane Smith",
+            branchId: Guid.NewGuid(),
+            branchName: "Uptown Branch",
+            items: items.ToArray());
+    }
+
+    /// <summary>
+    /// Generates a valid sale with custom customer and branch information.
+    /// </summary>
+    public static Sale GenerateValidSaleWithCustomerAndBranch(
+        string customerName,
+        string branchName)
+    {
+        var items = new[]
+        {
+            SaleItem.Create(Guid.NewGuid(), "Default Product", 5, 100m)
+        };
+
+        return Sale.Create(
+            saleDate: DateTime.UtcNow,
+            customerId: Guid.NewGuid(),
+            customerName: customerName,
+            branchId: Guid.NewGuid(),
+            branchName: branchName,
+            items: items);
     }
 }

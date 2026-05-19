@@ -5,6 +5,7 @@ using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using AutoMapper;
 using FluentAssertions;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -16,6 +17,7 @@ public class UpdateSaleHandlerTests
     private readonly ISaleReadRepository _readRepository;
     private readonly ISaleUpdateRepository _updateRepository;
     private readonly IMapper _mapper;
+    private readonly IMediator _mediator;
     private readonly ILogger<UpdateSaleHandler> _logger;
     private readonly UpdateSaleHandler _handler;
 
@@ -24,8 +26,9 @@ public class UpdateSaleHandlerTests
         _readRepository = Substitute.For<ISaleReadRepository>();
         _updateRepository = Substitute.For<ISaleUpdateRepository>();
         _mapper = Substitute.For<IMapper>();
+        _mediator = Substitute.For<IMediator>();
         _logger = Substitute.For<ILogger<UpdateSaleHandler>>();
-        _handler = new UpdateSaleHandler(_readRepository, _updateRepository, _mapper, _logger);
+        _handler = new UpdateSaleHandler(_readRepository, _updateRepository, _mapper, _mediator, _logger);
     }
 
     [Fact(DisplayName = "Given existing sale When handling Then updates and returns result")]
