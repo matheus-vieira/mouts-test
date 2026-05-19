@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
+using Ambev.DeveloperEvaluation.Domain.Events.Sales;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
 using AutoMapper;
 using MediatR;
@@ -15,6 +16,7 @@ public partial class UpdateSaleHandler(
     ISaleReadRepository readRepository,
     ISaleUpdateRepository updateRepository,
     IMapper mapper,
+    IMediator mediator,
     ILogger<UpdateSaleHandler> logger) : IRequestHandler<UpdateSaleCommand, UpdateSaleResult>
 {
     /// <summary>
@@ -54,7 +56,10 @@ public partial class UpdateSaleHandler(
 
         LogUpdateSuccess(logger, sale.Id, sale.Items.Count);
 
-        // 6. Map domain entity to result DTO
+        // 6. Publish SaleModifiedEvent
+        await mediator.Publish(new SaleModifiedEvent(sale), cancellationToken);
+
+        // 7. Map domain entity to result DTO
         return mapper.Map<UpdateSaleResult>(sale);
     }
 }

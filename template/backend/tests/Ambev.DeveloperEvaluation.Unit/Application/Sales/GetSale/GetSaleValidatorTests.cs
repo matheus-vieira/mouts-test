@@ -1,4 +1,5 @@
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
+using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using FluentAssertions;
 using Xunit;
 
@@ -6,37 +7,26 @@ namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.GetSale;
 
 public class GetSaleValidatorTests
 {
-    private readonly GetSaleValidator _validator;
+    private readonly GetSaleValidator _validator = new();
 
-    public GetSaleValidatorTests()
-    {
-        _validator = new GetSaleValidator();
-    }
-
-    [Fact(DisplayName = "Given valid sale id When validating Then passes validation")]
+    [Fact(DisplayName = "Given valid Sale ID When validating Then passes validation")]
     public void Validate_ValidId_ShouldPass()
     {
-        // Given
-        var command = new GetSaleCommand(Guid.NewGuid());
+        var command = GetSaleHandlerTestData.GenerateValidCommand();
 
-        // When
         var result = _validator.Validate(command);
 
-        // Then
         result.IsValid.Should().BeTrue();
     }
 
-    [Fact(DisplayName = "Given empty sale id When validating Then fails validation")]
+    [Fact(DisplayName = "Given empty Sale ID When validating Then fails validation")]
     public void Validate_EmptyId_ShouldFail()
     {
-        // Given
         var command = new GetSaleCommand(Guid.Empty);
 
-        // When
         var result = _validator.Validate(command);
 
-        // Then
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.PropertyName == "Id");
+        result.Errors.Should().ContainSingle(e => e.PropertyName == "Id");
     }
 }

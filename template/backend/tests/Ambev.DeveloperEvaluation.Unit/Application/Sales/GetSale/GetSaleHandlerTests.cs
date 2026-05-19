@@ -1,6 +1,7 @@
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
+using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using AutoMapper;
 using FluentAssertions;
 using NSubstitute;
@@ -10,52 +11,51 @@ namespace Ambev.DeveloperEvaluation.Unit.Application.Sales.GetSale;
 
 public class GetSaleHandlerTests
 {
-    private readonly ISaleRepository _repository;
+    private readonly ISaleReadRepository _repository;
     private readonly IMapper _mapper;
     private readonly GetSaleHandler _handler;
 
     public GetSaleHandlerTests()
     {
-        _repository = Substitute.For<ISaleRepository>();
+        _repository = Substitute.For<ISaleReadRepository>();
         _mapper = Substitute.For<IMapper>();
         _handler = new GetSaleHandler(_repository, _mapper);
     }
 
-    [Fact(DisplayName = "Given existing sale When retrieving Then returns success response")]
-    public async Task Handle_ExistingSale_ReturnsSuccessResponse()
+    [Fact(DisplayName = "Given existing sale When handling Then returns mapped sale result")]
+    public async Task Handle_ExistingSale_ReturnsMappedResult()
     {
-        // Given
-        var saleId = Guid.NewGuid();
-        var command = new GetSaleCommand(saleId);
-        var existingSale = Sale.Create(DateTime.UtcNow, Guid.NewGuid(), "Customer", Guid.NewGuid(), "Branch", 
-            [SaleItem.Create(Guid.NewGuid(), "Product", 2, 50m)]);
+        // Arrange
+        var sale = SaleEventTestData.GenerateValidSale();
+        var command = new GetSaleCommand(sale.Id);
+        var expectedResult = new GetSaleResult { Id = sale.Id };
 
-        var expectedResult = new GetSaleResult { Id = saleId, SaleNumber = "S001" };
+        _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns(sale);
+        _mapper.Map<GetSaleResult>(sale).Returns(expectedResult);
 
-        _repository.GetByIdAsync(saleId, Arg.Any<CancellationToken>()).Returns(existingSale);
-        _mapper.Map<GetSaleResult>(existingSale).Returns(expectedResult);
-
-        // When
+        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Then
+        // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(saleId);
-        await _repository.Received(1).GetByIdAsync(saleId, Arg.Any<CancellationToken>());
+        result.Id.Should().Be(sale.Id);
+        await _repository.Received(1).GetByIdAsync(command.Id, Arg.Any<CancellationToken>());
     }
 
-    [Fact(DisplayName = "Given non-existing sale When retrieving Then throws KeyNotFoundException")]
-    public async Task Handle_NonExistingSale_ThrowsKeyNotFoundException()
+    [Fact(DisplayName = "Given non-existent sale When handling Then throws KeyNotFoundException")]
+    public async Task Handle_NonExistentSale_ThrowsKeyNotFoundException()
     {
-        // Given
-        var saleId = Guid.NewGuid();
-        var command = new GetSaleCommand(saleId);
-        _repository.GetByIdAsync(saleId, Arg.Any<CancellationToken>()).Returns((Sale?)null);
+        // Arrange
+        var command = GetSaleHandlerTestData.GenerateValidCommand();
+        _repository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns((Sale?)null);
 
-        // When
+        // Act
         var act = () => _handler.Handle(command, CancellationToken.None);
 
-        // Then
-        await act.Should().ThrowAsync<KeyNotFoundException>();
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Sale with ID {command.Id} was not found");
     }
 }
