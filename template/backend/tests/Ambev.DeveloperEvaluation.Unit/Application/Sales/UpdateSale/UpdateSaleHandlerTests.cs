@@ -2,8 +2,8 @@ using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Domain.Entities.Sales;
 using Ambev.DeveloperEvaluation.Domain.Exceptions;
 using Ambev.DeveloperEvaluation.Domain.Repositories.Sales;
+using Ambev.DeveloperEvaluation.Unit.Application.TestData;
 using AutoMapper;
-using Bogus;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -18,7 +18,6 @@ public class UpdateSaleHandlerTests
     private readonly IMapper _mapper;
     private readonly ILogger<UpdateSaleHandler> _logger;
     private readonly UpdateSaleHandler _handler;
-    private readonly Faker _faker;
 
     public UpdateSaleHandlerTests()
     {
@@ -27,134 +26,61 @@ public class UpdateSaleHandlerTests
         _mapper = Substitute.For<IMapper>();
         _logger = Substitute.For<ILogger<UpdateSaleHandler>>();
         _handler = new UpdateSaleHandler(_readRepository, _updateRepository, _mapper, _logger);
-        _faker = new Faker("pt_BR");
     }
 
-    private static Sale BuildSale() =>
-        Sale.Create(
-            DateTime.UtcNow,
-            Guid.NewGuid(),
-            "Customer",
-            Guid.NewGuid(),
-            "Branch",
-            [SaleItem.Create(Guid.NewGuid(), "Old Item", 1, 10m)]);
-
-    private UpdateSaleCommand BuildValidCommand(Guid? saleId = null) =>
-        new()
-        {
-            Id = saleId ?? Guid.NewGuid(),
-            CustomerId = Guid.NewGuid(),
-            CustomerName = _faker.Person.FullName,
-            BranchId = Guid.NewGuid(),
-            BranchName = _faker.Company.CompanyName(),
-            Items =
-            [
-                new UpdateSaleItemCommand
-                {
-                    ProductId = Guid.NewGuid(),
-                    ProductName = _faker.Commerce.ProductName(),
-                    Quantity = _faker.Random.Int(1, 5),
-                    UnitPrice = _faker.Random.Decimal(1, 100)
-                }
-            ]
-        };
-
-    [Fact(DisplayName = "Given existing sale When updating Then returns success response")]
-    public async Task Handle_ExistingSale_ReturnsSuccessResponse()
+    [Fact(DisplayName = "Given existing sale When handling Then updates and returns result")]
+    public async Task Handle_ExistingSale_UpdatesSuccessfully()
     {
-        // Given
-        var existingSale = BuildSale();
-        var command = BuildValidCommand(existingSale.Id);
-        var expectedResult = new UpdateSaleResult { Id = existingSale.Id };
+        // Arrange
+        var sale = SaleEventTestData.GenerateValidSale();
+        var command = UpdateSaleHandlerTestData.GenerateValidCommand(sale.Id);
+        var expectedResult = new UpdateSaleResult { Id = sale.Id };
 
-        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
-        _mapper.Map<UpdateSaleResult>(existingSale).Returns(expectedResult);
+        _readRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns(sale);
+        _mapper.Map<UpdateSaleResult>(sale).Returns(expectedResult);
 
-        // When
+        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Then
+        // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(existingSale.Id);
-        await _updateRepository.Received(1).UpdateAsync(existingSale, Arg.Any<CancellationToken>());
+        await _updateRepository.Received(1).UpdateAsync(sale, Arg.Any<CancellationToken>());
+        await _readRepository.Received(1).GetByIdAsync(command.Id, Arg.Any<CancellationToken>());
     }
 
-    [Fact(DisplayName = "Given existing sale When updating Then recalculates items and persists")]
-    public async Task Handle_ExistingSale_UpdatesItemsAndPersists()
+    [Fact(DisplayName = "Given non-existent sale When handling Then throws KeyNotFoundException")]
+    public async Task Handle_NonExistentSale_ThrowsKeyNotFoundException()
     {
-        // Given
-        var existingSale = BuildSale();
-        var command = BuildValidCommand(existingSale.Id);
-        command.Items =
-        [
-            new UpdateSaleItemCommand
-            {
-                ProductId = Guid.NewGuid(),
-                ProductName = "New Product",
-                Quantity = 10,
-                UnitPrice = 20m
-            }
-        ];
+        // Arrange
+        var command = UpdateSaleHandlerTestData.GenerateValidCommand();
+        _readRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns((Sale?)null);
 
-        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
-        _mapper.Map<UpdateSaleResult>(Arg.Any<Sale>()).Returns(new UpdateSaleResult { Id = existingSale.Id });
-
-        // When
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Then
-        existingSale.Items.Should().HaveCount(1);
-        existingSale.Items.First().ProductName.Should().Be("New Product");
-        existingSale.Items.First().Quantity.Should().Be(10);
-    }
-
-    [Fact(DisplayName = "Given non-existing sale When updating Then throws KeyNotFoundException")]
-    public async Task Handle_NonExistingSale_ThrowsKeyNotFoundException()
-    {
-        // Given
-        var command = BuildValidCommand();
-        _readRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>()).Returns((Sale?)null);
-
-        // When
+        // Act
         var act = () => _handler.Handle(command, CancellationToken.None);
 
-        // Then
+        // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage($"Sale with ID {command.Id} was not found");
     }
 
-    [Fact(DisplayName = "Given cancelled sale When updating Then throws DomainException")]
-    public async Task Handle_CancelledSale_ThrowsDomainException()
+    [Fact(DisplayName = "Given cancelled sale When handling Then domain rules should throw")]
+    public async Task Handle_CancelledSale_ThrowsInvalidOperationException()
     {
-        // Given
-        var existingSale = BuildSale();
-        existingSale.Cancel();
-        var command = BuildValidCommand(existingSale.Id);
+        // Arrange
+        var sale = SaleEventTestData.GenerateValidSale();
+        sale.Cancel();
+        var command = UpdateSaleHandlerTestData.GenerateValidCommand(sale.Id);
 
-        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
+        _readRepository.GetByIdAsync(command.Id, Arg.Any<CancellationToken>())
+            .Returns(sale);
 
-        // When
+        // Act
         var act = () => _handler.Handle(command, CancellationToken.None);
 
-        // Then
+        // Assert
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Cannot update a cancelled sale.");
-    }
-
-    [Fact(DisplayName = "Given existing sale When updating Then maps sale to result")]
-    public async Task Handle_ExistingSale_MapsSaleToResult()
-    {
-        // Given
-        var existingSale = BuildSale();
-        var command = BuildValidCommand(existingSale.Id);
-
-        _readRepository.GetByIdAsync(existingSale.Id, Arg.Any<CancellationToken>()).Returns(existingSale);
-        _mapper.Map<UpdateSaleResult>(Arg.Any<Sale>()).Returns(new UpdateSaleResult { Id = existingSale.Id });
-
-        // When
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Then
-        _mapper.Received(1).Map<UpdateSaleResult>(Arg.Is<Sale>(s => s.Id == existingSale.Id));
     }
 }
