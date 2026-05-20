@@ -276,5 +276,4 @@ docker compose up -d
 ## What's Next?
 
 - **API Documentation:** Open Swagger UI at `/swagger` to explore all endpoints
-- **Running Tests:** See [docs/RUNNING_TESTS.md](./RUNNING_TESTS.md) for unit, integration, and functional test instructions
-- **Project Architecture:** See [.doc/overview.md](../.doc/overview.md) for the DDD architecture overview
+- **Running Tests:** See [./running-tests.md](./running-tests.md) for unit, integration, and functional test instructions
