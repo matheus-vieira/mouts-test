@@ -75,3 +75,12 @@ This section includes links to the detailed documentation for the different API 
 This section describes the overall structure and organization of the project files and directories. 
 
 See [Project Structure](/.doc/project-structure.md)
+
+## Project Setup/Execution
+This section provides instructions on how to set up the development environment and run the project locally, including any necessary dependencies and configuration steps.
+See [Project Setup/Execution](/.doc/project-setup.md)
+
+## Testing
+This section provides an overview of the testing strategy and approach used in the project, including the types of tests implemented and the tools and frameworks utilized for testing.
+
+See [Testing](/.doc/testing.md)
